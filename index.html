@@ -98,65 +98,67 @@
         </div>
     </main>
 
-    <script>
-        async function startAudit() {
-            const code = document.getElementById('userCode').value;
-            if (!code.trim()) {
-                alert("Error! Please paste your source code.");
-                return;
-            }
+   <script>
+    async function startAudit() {
+        const codeInput = document.getElementById('codeInput').value;
+        const resultSection = document.getElementById('resultSection');
+        const scoreEl = document.getElementById('scoreEl');
+        const carbonFootprintEl = document.getElementById('carbonFootprint');
+        const analysisTextEl = document.getElementById('analysisText');
+        const optimizedCodeEl = document.getElementById('optimizedCode');
 
-            const btn = document.getElementById('auditBtn');
-            const btnText = document.getElementById('btnText');
-            const btnIcon = document.getElementById('btnIcon');
-            
-            btn.disabled = true;
-            btn.classList.add('opacity-70', 'cursor-not-allowed');
-            btnText.innerText = "IBM Bob Engine Syncing AST Tokens...";
-            btnIcon.innerText = "⚙️";
-
-            try {
-                const response = await fetch('/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ code: code })
-                });
-                
-                const data = await response.json();
-                
-                if (response.ok) {
-                    const scoreEl = document.getElementById('ecoScore');
-                    scoreEl.innerText = data.eco_score + "/100";
-                    
-                    if (data.eco_score >= 80) {
-                        scoreEl.className = "text-5xl font-black text-green-400 mt-2";
-                    } else if (data.eco_score >= 55) {
-                        scoreEl.className = "text-5xl font-black text-amber-400 mt-2";
-                    } else {
-                        scoreEl.className = "text-5xl font-black text-red-500 mt-2";
-                    }
-
-                    document.getElementById('carbonFootprint').innerText = data.carbon_footprint;
-                    
-                    // Markdown formats parse converter logic (replaces **bold** text structure safely)
-                    let formattedAnalysis = data.analysis.replace(/\*\*(.*?)\*\*/g, '<strong class="text-green-400 font-semibold">$1</strong>');
-                    document.getElementById('analysisText').innerHTML = formattedAnalysis;
-                    
-                    document.getElementById('optimizedCode').innerText = data.optimized_code;
-                    document.getElementById('resultSection').classList.remove('hidden');
-                } else {
-                    alert("Error: " + (data.error || "Something went wrong!"));
-                }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("Backend offline hai! Terminal mein 'python app.py' run karo.");
-            } finally {
-                btn.disabled = false;
-                btn.classList.remove('opacity-70', 'cursor-not-allowed');
-                btnText.innerText = "Start Eco-Audit";
-                btnIcon.innerText = "🚀";
-            }
+        if (!codeInput.trim()) {
+            alert("Bhai, pehle thoda code toh daalo!");
+            return;
         }
-    </script>
+
+        // Loading state
+        resultSection.classList.remove('hidden');
+        scoreEl.innerText = "Auditing...";
+        carbonFootprintEl.innerText = "Calculating...";
+        analysisTextEl.innerText = "Analyzing your code green factor...";
+        optimizedCodeEl.innerText = "Optimizing...";
+
+        try {
+            // Tumhara naya Live Render URL yahan connect kar diya hai
+            const response = await fetch('https://green-code-eco-auditor.onrender.com/audit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: codeInput })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                // Score set karo aur color change karo
+                scoreEl.innerText = data.score + "/10";
+                if (data.score >= 7) {
+                    scoreEl.className = "text-5xl font-black text-green-500 mt-2";
+                } else if (data.score >= 4) {
+                    scoreEl.className = "text-5xl font-black text-yellow-500 mt-2";
+                } else {
+                    scoreEl.className = "text-5xl font-black text-red-500 mt-2";
+                }
+
+                // Carbon Footprint set karo
+                carbonFootprintEl.innerText = data.carbon_footprint;
+
+                // Markdown text ko strong bold html mein convert safely karne ke liye
+                let formattedAnalysis = data.analysis.replace(/\*\*(.*?)\*\*/g, '<strong class="text-green-400 font-semibold">$1</strong>');
+                analysisTextEl.innerHTML = formattedAnalysis;
+
+                // Optimized code set karo
+                optimizedCodeEl.innerText = data.optimized_code;
+            } else {
+                alert("Error: " + (data.error || "Kuch gadbad ho gayi!"));
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            alert("Backend se response nahi aaya! Check karo Render par server chal raha hai na?");
+        }
+    }
+</script>ss
 </body>
 </html>
